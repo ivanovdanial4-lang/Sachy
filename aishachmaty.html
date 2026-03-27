@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>By DANILEVSKIJ - Multilingual</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --panel-color: #16213e;
+            --accent-color: #4ecca3;
+            --text-color: #eeeeee;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h2 { margin-top: 20px; letter-spacing: 2px; text-transform: uppercase; color: var(--accent-color); }
+
+        #setup {
+            background: var(--panel-color);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 450px;
+            width: 90%;
+            margin-top: 30px;
+            border: 1px solid #0f3460;
+        }
+
+        .input-group { margin-bottom: 15px; text-align: left; }
+        label { display: block; margin-bottom: 6px; font-size: 0.85em; color: #94a3b8; }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #0f3460;
+            border: 1px solid var(--accent-color);
+            color: white;
+            border-radius: 8px;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: var(--accent-color);
+            border: none;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #45b791;
+            transform: translateY(-2px);
+        }
+
+        #board {
+            width: 600px;
+            max-width: 95vw;
+            margin: 20px auto;
+            border: 10px solid #0f3460;
+            border-radius: 5px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+        }
+
+        #status {
+            font-size: 1.1em;
+            margin: 10px;
+            padding: 10px 20px;
+            background: #0f3460;
+            border-radius: 20px;
+            min-height: 1.5em;
+        }
+
+        .hidden { display: none !important; }
+        .lang-btn { background: #0f3460; color: white; width: auto; padding: 5px 10px; font-size: 0.8em; margin: 0 5px; }
+    </style>
+</head>
+<body>
+
+    <h2 id="ui-title">Chess Pro AI</h2>
+
+    <div id="setup">
+        <div class="input-group">
+            <label id="ui-lang-label">Язык / Мова / Jazyk</label>
+            <select id="langSelect" onchange="changeLang()">
+                <option value="ru">Русский</option>
+                <option value="uk">Українська</option>
+                <option value="cs">Čeština</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label id="ui-side-label">Выберите сторону</label>
+            <select id="userColor">
+                <option value="w" id="ui-white">Белые</option>
+                <option value="b" id="ui-black">Черные</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label id="ui-diff-label">Уровень сложности</label>
+            <select id="skillLevel">
+                <option value="0" id="ui-diff-0">Новичок (Случайные ходы)</option>
+                <option value="1" id="ui-diff-1">Любитель (Захват фигур)</option>
+                <option value="2" id="ui-diff-2">Опытный (Анализ 2 хода)</option>
+                <option value="3" id="ui-diff-3">Профи (Анализ 3 хода)</option>
+                <option value="4" id="ui-diff-4">Мастер (Глубокий анализ)</option>
+            </select>
+        </div>
+
+        <button onclick="startGame()" id="ui-play-btn">ИГРАТЬ</button>
+    </div>
+
+    <div id="gameContainer" class="hidden">
+        <div id="status"></div>
+        <div id="board"></div>
+        <div style="text-align: center;">
+            <button onclick="location.reload()" style="width: auto; padding: 10px 30px; background: #e94560; color: white;" id="ui-reset-btn">Сдаться / Заново</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+    <script>
+        var board = null;
+        var game = new Chess();
+        var userColor = 'w';
+        var currentLang = 'ru';
+
+        const i18n = {
+            ru: {
+                title: "Chess Pro AI",
+                side: "Выберите сторону",
+                white: "Белые (первый ход)",
+                black: "Черные",
+                diff: "Уровень сложности",
+                play: "ИГРАТЬ",
+                reset: "Сдаться / Заново",
+                turnW: "Ход Белых",
+                turnB: "Ход Черных",
+                check: "ШАХ",
+                mate: "МАТ! Победили ",
+                draw: "НИЧЬЯ",
+                diffs: ["Новичок", "Любитель", "Опытный", "Профи", "Мастер"],
+                winners: { w: "Белые", b: "Черные" }
+            },
+            uk: {
+                title: "Шахи Pro AI",
+                side: "Оберіть сторону",
+                white: "Білі (перший хід)",
+                black: "Чорні",
+                diff: "Рівень складності",
+                play: "ГРАТИ",
+                reset: "Здатися / Спочатку",
+                turnW: "Хід Білих",
+                turnB: "Хід Чорних",
+                check: "ШАХ",
+                mate: "МАТ! Перемогли ",
+                draw: "НІЧИЯ",
+                diffs: ["Новачок", "Любитель", "Досвідчений", "Профі", "Майстер"],
+                winners: { w: "Білі", b: "Чорні" }
+            },
+            cs: {
+                title: "Šachy Pro AI",
+                side: "Vyberte stranu",
+                white: "Bílí (začínají)",
+                black: "Černí",
+                diff: "Úroveň obtížnosti",
+                play: "HRÁT",
+                reset: "Vzdát se / Znovu",
+                turnW: "Tah Bílých",
+                turnB: "Tah Černých",
+                check: "ŠACH",
+                mate: "ŠACHMAT! Vyhráli ",
+                draw: "REMIZA",
+                diffs: ["Začátečník", "Amatér", "Zkušený", "Profi", "Mistr"],
+                winners: { w: "Bílí", b: "Černí" }
+            }
+        };
+
+        function changeLang() {
+            currentLang = $('#langSelect').val();
+            const t = i18n[currentLang];
+            $('#ui-title').text(t.title);
+            $('#ui-side-label').text(t.side);
+            $('#ui-white').text(t.white);
+            $('#ui-black').text(t.black);
+            $('#ui-diff-label').text(t.diff);
+            $('#ui-play-btn').text(t.play);
+            $('#ui-reset-btn').text(t.reset);
+            for(let i=0; i<5; i++) $(`#ui-diff-${i}`).text(t.diffs[i]);
+            updateStatus();
+        }
+
+        // AI Logic
+        const weights = { p: 10, n: 30, b: 30, r: 50, q: 90, k: 900 };
+        function evaluateBoard(game) {
+            let total = 0;
+            game.board().forEach(row => {
+                row.forEach(p => {
+                    if (p) {
+                        let val = weights[p.type];
+                        total += (p.color === 'w' ? val : -val);
+                    }
+                });
+            });
+            return total;
+        }
+
+        function minimax(game, depth, alpha, beta, isMax) {
+            if (depth === 0 || game.game_over()) return -evaluateBoard(game);
+            let moves = game.moves();
+            if (isMax) {
+                let best = -9999;
+                for (let m of moves) {
+                    game.move(m);
+                    best = Math.max(best, minimax(game, depth - 1, alpha, beta, false));
+                    game.undo();
+                    alpha = Math.max(alpha, best);
+                    if (beta <= alpha) break;
+                }
+                return best;
+            } else {
+                let best = 9999;
+                for (let m of moves) {
+                    game.move(m);
+                    best = Math.min(best, minimax(game, depth - 1, alpha, beta, true));
+                    game.undo();
+                    beta = Math.min(beta, best);
+                    if (beta <= alpha) break;
+                }
+                return best;
+            }
+        }
+
+        function getBestMove(depth) {
+            let moves = game.moves();
+            let bestMove = null;
+            let bestVal = -9999;
+            moves.sort(() => Math.random() - 0.5);
+            for (let m of moves) {
+                game.move(m);
+                let v = minimax(game, depth - 1, -10000, 10000, false);
+                game.undo();
+                if (v > bestVal) { bestVal = v; bestMove = m; }
+            }
+            return bestMove;
+        }
+
+        function onDrop(source, target) {
+            let move = game.move({ from: source, to: target, promotion: 'q' });
+            if (move === null) return 'snapback';
+            updateStatus();
+            window.setTimeout(makeMove, 250);
+        }
+
+        function makeMove() {
+            if (game.game_over()) return;
+            let skill = parseInt($('#skillLevel').val());
+            let move;
+            if (skill === 0) {
+                let moves = game.moves();
+                move = moves[Math.floor(Math.random() * moves.length)];
+            } else if (skill === 1) {
+                let moves = game.moves();
+                move = moves.find(m => m.includes('#')) || moves.find(m => m.includes('x')) || moves[Math.floor(Math.random() * moves.length)];
+            } else {
+                move = getBestMove(skill);
+            }
+            game.move(move);
+            board.position(game.fen());
+            updateStatus();
+        }
+
+        function updateStatus() {
+            const t = i18n[currentLang];
+            let status = '';
+            let moveColor = (game.turn() === 'b') ? t.turnB : t.turnW;
+
+            if (game.in_checkmate()) {
+                status = t.mate + (game.turn() === 'w' ? t.winners.b : t.winners.w);
+            } else if (game.in_draw()) {
+                status = t.draw;
+            } else {
+                status = moveColor;
+                if (game.in_check()) status += ` (${t.check})`;
+            }
+            $('#status').text(status);
+        }
+
+        function startGame() {
+            userColor = $('#userColor').val();
+            $('#setup').addClass('hidden');
+            $('#gameContainer').removeClass('hidden');
+            board = ChessBoard('board', {
+                draggable: true,
+                position: 'start',
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png',
+                orientation: (userColor === 'w') ? 'white' : 'black',
+                onDrop: onDrop
+            });
+            if (userColor === 'b') window.setTimeout(makeMove, 500);
+            updateStatus();
+        }
+
+        $(window).resize(() => board && board.resize());
+        changeLang(); // Инициализация языка при загрузке
+    </script>
+</body>
+</html>
