@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GameMaster Pro — Шахматы & Шашки</title>
+<title>DanilevskijMaster Pro — Шахматы & Шашки</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -199,6 +199,10 @@ body{
 }
 
 .hidden{display:none!important;}
+
+.lang-btn{padding:7px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;color:var(--text3);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:1px;cursor:pointer;transition:.2s;}
+.lang-btn:hover{border-color:var(--border2);color:var(--text2);}
+.lang-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(200,240,58,.08);}
 </style>
 </head>
 <body>
@@ -217,51 +221,59 @@ body{
     <div class="setup-subtitle">Шахматы или шашки — выберите противника и начинайте</div>
 
     <div class="tabs">
-      <button class="tab active" id="tab-chess" onclick="selectMode('chess')">♟ Шахматы</button>
-      <button class="tab" id="tab-checkers" onclick="selectMode('checkers')">⬤ Шашки</button>
+      <button class="tab active" id="tab-chess" onclick="selectMode('chess')" id="tab-chess-btn"></button>
+      <button class="tab" id="tab-checkers" onclick="selectMode('checkers')" id="tab-checkers-btn"></button>
     </div>
 
-    <div class="section-label">Противник</div>
+    <!-- Language row -->
+    <div style="display:flex;gap:8px;margin-bottom:28px;justify-content:center;">
+      <button class="lang-btn active" onclick="changeLang('ru')" id="lang-ru">RU</button>
+      <button class="lang-btn" onclick="changeLang('uk')" id="lang-uk">UK</button>
+      <button class="lang-btn" onclick="changeLang('cs')" id="lang-cs">CS</button>
+      <button class="lang-btn" onclick="changeLang('en')" id="lang-en">EN</button>
+    </div>
+
+    <div class="section-label" id="lbl-opponent"></div>
     <div class="bots-grid">
       <div class="bot-card bot-ivan selected" onclick="selectBot('ivan')">
         <div class="bot-avatar">И</div>
         <div class="bot-name">Иван</div>
-        <div class="bot-style">Сбалансированный</div>
-        <div class="bot-trait">Стратег</div>
+        <div class="bot-style" id="bot-ivan-style"></div>
+        <div class="bot-trait" id="bot-ivan-trait"></div>
       </div>
       <div class="bot-card bot-andrey" onclick="selectBot('andrey')">
         <div class="bot-avatar">А</div>
         <div class="bot-name">Андрей</div>
-        <div class="bot-style">Агрессивный</div>
-        <div class="bot-trait">Атака</div>
+        <div class="bot-style" id="bot-andrey-style"></div>
+        <div class="bot-trait" id="bot-andrey-trait"></div>
       </div>
       <div class="bot-card bot-nikolay" onclick="selectBot('nikolay')">
         <div class="bot-avatar">Н</div>
         <div class="bot-name">Николай</div>
-        <div class="bot-style">Позиционный</div>
-        <div class="bot-trait">Защита</div>
+        <div class="bot-style" id="bot-nikolay-style"></div>
+        <div class="bot-trait" id="bot-nikolay-trait"></div>
       </div>
     </div>
 
-    <div class="section-label">Сложность</div>
+    <div class="section-label" id="lbl-difficulty"></div>
     <div class="diff-grid">
-      <div class="diff-btn" onclick="selectDiff(1)">Лёгкий</div>
-      <div class="diff-btn selected" onclick="selectDiff(2)">Средний</div>
-      <div class="diff-btn" onclick="selectDiff(3)">Сложный</div>
-      <div class="diff-btn" onclick="selectDiff(4)">Эксперт</div>
+      <div class="diff-btn" id="diff-1" onclick="selectDiff(1)"></div>
+      <div class="diff-btn selected" id="diff-2" onclick="selectDiff(2)"></div>
+      <div class="diff-btn" id="diff-3" onclick="selectDiff(3)"></div>
+      <div class="diff-btn" id="diff-4" onclick="selectDiff(4)"></div>
     </div>
 
-    <div class="section-label">Цвет</div>
+    <div class="section-label" id="lbl-color"></div>
     <div class="color-row">
       <button class="color-btn selected" onclick="selectColor('w')">
-        <div class="color-dot white"></div> Белые (первый ход)
+        <div class="color-dot white"></div> <span id="lbl-white"></span>
       </button>
       <button class="color-btn" onclick="selectColor('b')">
-        <div class="color-dot black"></div> Чёрные
+        <div class="color-dot black"></div> <span id="lbl-black"></span>
       </button>
     </div>
 
-    <button class="play-btn" onclick="startGame()">Начать игру →</button>
+    <button class="play-btn" id="lbl-play" onclick="startGame()"></button>
   </div>
 
   <!-- GAME -->
@@ -281,11 +293,11 @@ body{
           <div class="pc-captured" id="topCaptured"></div>
         </div>
         <div class="info-panel">
-          <div class="info-title">Статус</div>
-          <div class="status-text" id="statusText">Ваш ход</div>
+          <div class="info-title" id="lbl-status-title"></div>
+          <div class="status-text" id="statusText"></div>
         </div>
         <div class="history-panel">
-          <div class="info-title">История ходов</div>
+          <div class="info-title" id="lbl-history-title"></div>
           <ul class="history-list" id="historyList"></ul>
         </div>
       </div>
@@ -312,9 +324,9 @@ body{
           <div class="pc-captured" id="bottomCaptured"></div>
         </div>
         <div class="action-btns">
-          <button class="act-btn" onclick="undoMove()">↩ Отменить ход</button>
-          <button class="act-btn" onclick="newGame()">⟳ Новая партия</button>
-          <button class="act-btn danger" onclick="resign()">⚑ Сдаться</button>
+          <button class="act-btn" id="btn-undo" onclick="undoMove()"></button>
+          <button class="act-btn" id="btn-newgame" onclick="newGame()"></button>
+          <button class="act-btn danger" id="btn-resign" onclick="resign()"></button>
         </div>
       </div>
     </div>
@@ -325,17 +337,17 @@ body{
 <div class="result-overlay" id="resultOverlay" style="display:none;flex-direction:column;">
   <div class="result-box">
     <span class="result-icon" id="resultIcon">🏆</span>
-    <div class="result-title" id="resultTitle">Победа!</div>
+    <div class="result-title" id="resultTitle"></div>
     <div class="result-sub" id="resultSub"></div>
-    <button class="result-btn" onclick="newGame()">Новая партия</button>
-    <button class="result-btn sec" onclick="location.reload()">В меню</button>
+    <button class="result-btn" id="btn-result-new" onclick="newGame()"></button>
+    <button class="result-btn sec" id="btn-result-menu" onclick="location.reload()"></button>
   </div>
 </div>
 
 <!-- Promotion modal -->
 <div class="promo-modal" id="promoModal" style="display:none;flex-direction:column;">
   <div class="promo-box">
-    <div class="promo-title">Превращение пешки</div>
+    <div class="promo-title" id="lbl-promotion"></div>
     <div class="promo-pieces" id="promoPieces"></div>
   </div>
 </div>
@@ -358,6 +370,160 @@ let capturedByWhite = [];
 let capturedByBlack = [];
 let promotionResolve = null;
 let gameOver = false;
+let currentLang = 'ru';
+
+const I18N = {
+  ru:{
+    chess:'♟ Шахматы', checkers:'⬤ Шашки',
+    opponent:'Противник', difficulty:'Сложность', color:'Цвет',
+    easy:'Лёгкий', medium:'Средний', hard:'Сложный', expert:'Эксперт',
+    white:'Белые (первый ход)', black:'Чёрные',
+    play:'Начать игру →',
+    status:'Статус', history:'История ходов',
+    undo:'↩ Отменить', newgame:'⟳ Новая партия', resign:'⚑ Сдаться',
+    yourTurn:'Ваш ход', opponentTurn:'Ход соперника', gameOver:'Игра окончена',
+    check:'ШАХ!', thinking:'думает',
+    mate:'Мат!', youMated:'Вы поставили мат!', botMated:'Вам поставили мат.',
+    stalemate:'Пат!', stalemateDesc:'Ничья — нет ходов.',
+    blocked:'Блокировка!', blockedDesc:'Нет доступных ходов.',
+    whiteCaptured:'Белые шашки захвачены.', blackCaptured:'Чёрные шашки захвачены.',
+    resigned:'Вы сдались', resignDesc:'Лучше в следующий раз!',
+    newPartie:'Новая партия', toMenu:'В меню',
+    promotion:'Превращение пешки',
+    undoAlert:'Отмена хода будет доступна в следующей версии.',
+    balanced:'Сбалансированный', aggressive:'Агрессивный', positional:'Позиционный',
+    strategist:'Стратег', attacker:'Атака', defender:'Защита',
+    white_label:'Белые', black_label:'Чёрные',
+    setup_title1:'Выберите', setup_title2:'свою игру',
+    setup_sub:'Шахматы или шашки — выберите противника и начинайте',
+    lang_label:'Язык',
+  },
+  uk:{
+    chess:'♟ Шахи', checkers:'⬤ Шашки',
+    opponent:'Суперник', difficulty:'Складність', color:'Колір',
+    easy:'Легкий', medium:'Середній', hard:'Складний', expert:'Експерт',
+    white:'Білі (перший хід)', black:'Чорні',
+    play:'Почати гру →',
+    status:'Статус', history:'Історія ходів',
+    undo:'↩ Скасувати', newgame:'⟳ Нова партія', resign:'⚑ Здатися',
+    yourTurn:'Ваш хід', opponentTurn:'Хід суперника', gameOver:'Гру завершено',
+    check:'ШАХ!', thinking:'думає',
+    mate:'Мат!', youMated:'Ви поставили мат!', botMated:'Вам поставили мат.',
+    stalemate:'Пат!', stalemateDesc:'Нічия — немає ходів.',
+    blocked:'Блокування!', blockedDesc:'Немає доступних ходів.',
+    whiteCaptured:'Білі шашки захоплені.', blackCaptured:'Чорні шашки захоплені.',
+    resigned:'Ви здалися', resignDesc:'Наступного разу пощастить!',
+    newPartie:'Нова партія', toMenu:'До меню',
+    promotion:'Перетворення пішака',
+    undoAlert:'Скасування ходу буде доступне в наступній версії.',
+    balanced:'Збалансований', aggressive:'Агресивний', positional:'Позиційний',
+    strategist:'Стратег', attacker:'Атака', defender:'Захист',
+    white_label:'Білі', black_label:'Чорні',
+    setup_title1:'Оберіть', setup_title2:'свою гру',
+    setup_sub:'Шахи або шашки — оберіть суперника і починайте',
+    lang_label:'Мова',
+  },
+  cs:{
+    chess:'♟ Šachy', checkers:'⬤ Dáma',
+    opponent:'Soupeř', difficulty:'Obtížnost', color:'Barva',
+    easy:'Lehký', medium:'Střední', hard:'Těžký', expert:'Expert',
+    white:'Bílí (první tah)', black:'Černí',
+    play:'Začít hru →',
+    status:'Stav', history:'Historie tahů',
+    undo:'↩ Zpět', newgame:'⟳ Nová hra', resign:'⚑ Vzdát se',
+    yourTurn:'Váš tah', opponentTurn:'Tah soupeře', gameOver:'Hra skončila',
+    check:'ŠACH!', thinking:'přemýšlí',
+    mate:'Šachmat!', youMated:'Dali jste mat!', botMated:'Dostali jste mat.',
+    stalemate:'Pat!', stalemateDesc:'Remíza — žádné tahy.',
+    blocked:'Blokování!', blockedDesc:'Žádné dostupné tahy.',
+    whiteCaptured:'Bílé kameny sebrány.', blackCaptured:'Černé kameny sebrány.',
+    resigned:'Vzdali jste se', resignDesc:'Příště to vyjde!',
+    newPartie:'Nová hra', toMenu:'Do menu',
+    promotion:'Povýšení pěšce',
+    undoAlert:'Zpět bude dostupné v příští verzi.',
+    balanced:'Vyvážený', aggressive:'Agresivní', positional:'Poziční',
+    strategist:'Stratég', attacker:'Útok', defender:'Obrana',
+    white_label:'Bílí', black_label:'Černí',
+    setup_title1:'Vyberte', setup_title2:'svou hru',
+    setup_sub:'Šachy nebo dáma — vyberte soupeře a začněte',
+    lang_label:'Jazyk',
+  },
+  en:{
+    chess:'♟ Chess', checkers:'⬤ Checkers',
+    opponent:'Opponent', difficulty:'Difficulty', color:'Color',
+    easy:'Easy', medium:'Medium', hard:'Hard', expert:'Expert',
+    white:'White (first move)', black:'Black',
+    play:'Start game →',
+    status:'Status', history:'Move history',
+    undo:'↩ Undo', newgame:'⟳ New game', resign:'⚑ Resign',
+    yourTurn:'Your turn', opponentTurn:'Opponent\'s turn', gameOver:'Game over',
+    check:'CHECK!', thinking:'is thinking',
+    mate:'Checkmate!', youMated:'You checkmated the bot!', botMated:'You were checkmated.',
+    stalemate:'Stalemate!', stalemateDesc:'Draw — no moves available.',
+    blocked:'Blocked!', blockedDesc:'No available moves.',
+    whiteCaptured:'White pieces captured.', blackCaptured:'Black pieces captured.',
+    resigned:'You resigned', resignDesc:'Better luck next time!',
+    newPartie:'New game', toMenu:'Main menu',
+    promotion:'Pawn promotion',
+    undoAlert:'Undo will be available in the next version.',
+    balanced:'Balanced', aggressive:'Aggressive', positional:'Positional',
+    strategist:'Strategist', attacker:'Attack', defender:'Defense',
+    white_label:'White', black_label:'Black',
+    setup_title1:'Choose', setup_title2:'your game',
+    setup_sub:'Chess or Checkers — pick your opponent and play',
+    lang_label:'Language',
+  }
+};
+
+function t(key){ return (I18N[currentLang]||I18N.ru)[key]||key; }
+
+function changeLang(lang){
+  currentLang = lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.remove('active'));
+  const el=document.getElementById('lang-'+lang);
+  if(el) el.classList.add('active');
+  applyI18n();
+}
+
+function applyI18n(){
+  // Setup screen
+  const set=(id,val)=>{ const e=document.getElementById(id); if(e) e.textContent=val; };
+  set('tab-chess', t('chess'));
+  set('tab-checkers', t('checkers'));
+  set('lbl-opponent', t('opponent'));
+  set('lbl-difficulty', t('difficulty'));
+  set('lbl-color', t('color'));
+  set('diff-1', t('easy'));
+  set('diff-2', t('medium'));
+  set('diff-3', t('hard'));
+  set('diff-4', t('expert'));
+  set('lbl-white', t('white'));
+  set('lbl-black', t('black'));
+  set('lbl-play', t('play'));
+  set('bot-ivan-style', t('balanced'));
+  set('bot-ivan-trait', t('strategist'));
+  set('bot-andrey-style', t('aggressive'));
+  set('bot-andrey-trait', t('attacker'));
+  set('bot-nikolay-style', t('positional'));
+  set('bot-nikolay-trait', t('defender'));
+  // Game screen
+  set('lbl-status-title', t('status'));
+  set('lbl-history-title', t('history'));
+  set('btn-undo', t('undo'));
+  set('btn-newgame', t('newgame'));
+  set('btn-resign', t('resign'));
+  set('btn-result-new', t('newPartie'));
+  set('btn-result-menu', t('toMenu'));
+  set('lbl-promotion', t('promotion'));
+  // Setup title
+  const t1=document.querySelector('.setup-title');
+  if(t1) t1.innerHTML=`${t('setup_title1')}<br><em>${t('setup_title2')}</em>`;
+  const sub=document.querySelector('.setup-subtitle');
+  if(sub) sub.textContent=t('setup_sub');
+  // Re-apply status if game is running
+  const gameEl=document.getElementById('gameScreen');
+  if(gameEl&&gameEl.style.display!=='none') { updateSidebar(); }
+}
 
 // Chess board: 8x8. Pieces: { color: 'w'|'b', type: 'p','r','n','b','q','k' }
 let board = [];
@@ -439,8 +605,14 @@ function playSound(type){
 }
 
 // ═══════════════════════════════════════════════
-// CHESS PIECES UNICODE
+// CHESS PIECES — image URLs (Wikipedia set via chessboardjs CDN)
 // ═══════════════════════════════════════════════
+const PIECE_IMG_BASE = 'https://chessboardjs.com/img/chesspieces/wikipedia/';
+const PIECE_IMG = {
+  wk:'wK',wq:'wQ',wr:'wR',wb:'wB',wn:'wN',wp:'wP',
+  bk:'bK',bq:'bQ',br:'bR',bb:'bB',bn:'bN',bp:'bP'
+};
+// Unicode fallback still used for promotion modal and captured display
 const CHESS_PIECES = {
   wk:'♔', wq:'♕', wr:'♖', wb:'♗', wn:'♘', wp:'♙',
   bk:'♚', bq:'♛', br:'♜', bb:'♝', bn:'♞', bp:'♟'
@@ -915,13 +1087,13 @@ function renderChessBoard(){
       // Check highlight
       if(board[dr][dc]?.type==='k'&&board[dr][dc].color===currentTurn&&isInCheck(board,currentTurn,enPassantTarget,castlingRights))
         sq.classList.add('check-sq');
-      // Piece
+      // Piece — image for clear white/black distinction
       const p=board[dr][dc];
       if(p){
-        const span=document.createElement('span');
-        span.className='piece';
-        span.textContent=CHESS_PIECES[p.color+p.type];
-        sq.appendChild(span);
+        const img=document.createElement('img');
+        img.src=PIECE_IMG_BASE+PIECE_IMG[p.color+p.type]+'.png';
+        img.style.cssText='width:82%;height:82%;object-fit:contain;pointer-events:none;filter:drop-shadow(1px 2px 3px rgba(0,0,0,.55));';
+        sq.appendChild(img);
       }
       sq.onclick=()=>handleChessClick(dr,dc);
       el.appendChild(sq);
@@ -954,21 +1126,15 @@ function renderCheckersBoard(){
       }
       const p=checkerBoard[dr][dc];
       if(p){
-        const span=document.createElement('span');
-        span.className='piece';
-        span.style.fontSize='2.2rem';
+        const outer=document.createElement('div');
+        outer.style.cssText=`width:76%;height:76%;border-radius:50%;display:flex;align-items:center;justify-content:center;pointer-events:none;box-shadow:inset 0 -3px 6px rgba(0,0,0,.4),0 3px 8px rgba(0,0,0,.5);border:3px solid ${p.color==='w'?'rgba(255,255,255,.6)':'rgba(0,0,0,.5)'};background:${p.color==='w'?'radial-gradient(circle at 35% 35%,#fff8ee,#c8a870)':'radial-gradient(circle at 35% 35%,#4a4040,#1a1010)'};`;
         if(p.king){
-          span.textContent=p.color==='w'?'⬤':'⬤';
-          span.style.color=p.color==='w'?'#f5f0e8':'#1a1a22';
-          span.style.textShadow=p.color==='w'?'0 0 8px gold, inset 0 0 4px gold':'0 0 8px #aaa';
-          span.textContent=p.color==='w'?'♛':'♛'; // Use chess queen as king marker
-          span.style.color=p.color==='w'?'#fffbe6':'#2a2a2a';
-          span.style.fontSize='2rem';
-        } else {
-          span.textContent=p.color==='w'?'⬤':'⬤';
-          span.style.color=p.color==='w'?'#e8dfc8':'#1a1a22';
+          const crown=document.createElement('span');
+          crown.style.cssText=`font-size:1.1rem;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));color:${p.color==='w'?'#b8860b':'#ffd700'};`;
+          crown.textContent='♛';
+          outer.appendChild(crown);
         }
-        sq.appendChild(span);
+        sq.appendChild(outer);
       }
       sq.onclick=()=>handleCheckerClick(dr,dc);
       el.appendChild(sq);
@@ -1061,13 +1227,12 @@ function checkChessEnd(){
     if(isInCheck(board,currentTurn,enPassantTarget,castlingRights)){
       const winner=currentTurn==='w'?'b':'w';
       playSound('win');
-      showResult(winner===playerColor?'win':'lose','Мат!', winner===playerColor?'Вы поставили мат!':'Вам поставили мат.');
+      showResult(winner===playerColor?'win':'lose', t('mate'), winner===playerColor?t('youMated'):t('botMated'));
     } else {
-      showResult('draw','Пат!','Ничья — нет доступных ходов.');
+      showResult('draw', t('stalemate'), t('stalemateDesc'));
     }
     gameOver=true; return true;
   }
-  // Check 50-move rule (simplified)
   return false;
 }
 
@@ -1154,10 +1319,10 @@ function applyBotCheckerMove(move){
 function checkCheckersEnd(){
   const wCount=checkerBoard.flat().filter(p=>p&&p.color==='w').length;
   const bCount=checkerBoard.flat().filter(p=>p&&p.color==='b').length;
-  if(wCount===0){ playSound('win'); showResult(playerColor==='b'?'win':'lose','Победа!','Белые шашки захвачены.'); gameOver=true; return true; }
-  if(bCount===0){ playSound('win'); showResult(playerColor==='w'?'win':'lose','Победа!','Чёрные шашки захвачены.'); gameOver=true; return true; }
+  if(wCount===0){ playSound('win'); showResult(playerColor==='b'?'win':'lose','🏆',t('whiteCaptured')); gameOver=true; return true; }
+  if(bCount===0){ playSound('win'); showResult(playerColor==='w'?'win':'lose','🏆',t('blackCaptured')); gameOver=true; return true; }
   const moves=getAllCheckerMoves(checkerBoard,currentTurn);
-  if(!moves.length){ showResult(currentTurn===playerColor?'lose':'win','Блокировка!','Нет доступных ходов.'); gameOver=true; return true; }
+  if(!moves.length){ showResult(currentTurn===playerColor?'lose':'win', t('blocked'), t('blockedDesc')); gameOver=true; return true; }
   return false;
 }
 
@@ -1205,11 +1370,12 @@ function askPromotion(color){
     const modal=document.getElementById('promoModal');
     const pieces=document.getElementById('promoPieces');
     pieces.innerHTML='';
-    ['q','r','b','n'].forEach(t=>{
+    document.getElementById('lbl-promotion').textContent=t('promotion');
+    ['q','r','b','n'].forEach(pt=>{
       const btn=document.createElement('div');
       btn.className='promo-piece';
-      btn.textContent=CHESS_PIECES[color+t];
-      btn.onclick=()=>{ modal.style.display='none'; resolve(t); };
+      btn.textContent=CHESS_PIECES[color+pt];
+      btn.onclick=()=>{ modal.style.display='none'; resolve(pt); };
       pieces.appendChild(btn);
     });
     modal.style.display='flex';
@@ -1221,45 +1387,50 @@ function askPromotion(color){
 // ═══════════════════════════════════════════════
 function updateSidebar(){
   const botNames={ivan:'Иван',andrey:'Андрей',nikolay:'Николай'};
-  const botStyles={ivan:'Стратег',andrey:'Агрессор',nikolay:'Защитник'};
+  const botStyleKeys={ivan:'strategist',andrey:'attacker',nikolay:'defender'};
   const botColorClass={ivan:'bot-ivan-av',andrey:'bot-andrey-av',nikolay:'bot-nikolay-av'};
   const botTurn = playerColor==='w'?'b':'w';
-  // Player cards
   document.getElementById('topName').textContent=botNames[selectedBot];
-  document.getElementById('topSub').textContent=botStyles[selectedBot];
+  document.getElementById('topSub').textContent=t(botStyleKeys[selectedBot]);
   document.getElementById('topAvatar').className='pc-avatar '+botColorClass[selectedBot];
   document.getElementById('topAvatar').textContent=botNames[selectedBot][0];
-  document.getElementById('yourColorLabel').textContent=playerColor==='w'?'Белые':'Чёрные';
-  // Turn dots
+  document.getElementById('yourColorLabel').textContent=playerColor==='w'?t('white_label'):t('black_label');
   document.getElementById('topTurnDot').classList.toggle('hidden', currentTurn!==botTurn||gameOver);
   document.getElementById('bottomTurnDot').classList.toggle('hidden', currentTurn!==playerColor||gameOver);
   document.getElementById('topPlayerCard').classList.toggle('active-turn', currentTurn===botTurn&&!gameOver);
   document.getElementById('bottomPlayerCard').classList.toggle('active-turn', currentTurn===playerColor&&!gameOver);
+  // Sidebar labels
+  const set=(id,val)=>{ const e=document.getElementById(id); if(e) e.textContent=val; };
+  set('lbl-status-title', t('status'));
+  set('lbl-history-title', t('history'));
+  set('btn-undo', t('undo'));
+  set('btn-newgame', t('newgame'));
+  set('btn-resign', t('resign'));
   // Captured
   const capSymbols={p:'♟',n:'♞',b:'♝',r:'♜',q:'♛',k:'♚'};
   const renderCap=(arr,el)=>{
     el.innerHTML='';
     arr.forEach(p=>{ const s=document.createElement('span'); s.className='cap-piece'; s.textContent=capSymbols[p.type]||'●'; el.appendChild(s); });
   };
-  renderCap(capturedByWhite, document.getElementById('topCaptured')); // bot captured
+  renderCap(capturedByWhite, document.getElementById('topCaptured'));
   renderCap(capturedByBlack, document.getElementById('bottomCaptured'));
   updateStatus();
 }
 
 function updateStatus(mode='normal'){
   const el=document.getElementById('statusText');
-  if(gameOver){ el.textContent='Игра окончена'; return; }
+  if(gameOver){ el.textContent=t('gameOver'); return; }
   if(mode==='thinking'||isThinking){
     const botNames={ivan:'Иван',andrey:'Андрей',nikolay:'Николай'};
-    el.innerHTML=`${botNames[selectedBot]} думает<span class="thinking-dots"><span></span><span></span><span></span></span>`;
+    el.innerHTML=`${botNames[selectedBot]} ${t('thinking')}<span class="thinking-dots"><span></span><span></span><span></span></span>`;
     return;
   }
   if(currentTurn===playerColor){
     if(gameMode==='chess'&&isInCheck(board,playerColor,enPassantTarget,castlingRights))
-      el.innerHTML='Ваш ход — <strong style="color:#ff6b6b">ШАХ!</strong>';
-    else el.textContent='Ваш ход';
+      el.innerHTML=`${t('yourTurn')} — <strong style="color:#ff6b6b">${t('check')}</strong>`;
+    else el.textContent=t('yourTurn');
   } else {
-    el.textContent='Ход соперника';
+    el.textContent=t('opponentTurn');
   }
 }
 
@@ -1271,6 +1442,8 @@ function showResult(type, title, sub){
   document.getElementById('resultIcon').textContent=icons[type]||'♟';
   document.getElementById('resultTitle').textContent=title;
   document.getElementById('resultSub').textContent=sub;
+  document.getElementById('btn-result-new').textContent=t('newPartie');
+  document.getElementById('btn-result-menu').textContent=t('toMenu');
   const overlay=document.getElementById('resultOverlay');
   overlay.style.display='flex';
 }
@@ -1280,13 +1453,7 @@ function showResult(type, title, sub){
 // ═══════════════════════════════════════════════
 function undoMove(){
   if(isThinking||gameOver) return;
-  if(gameMode==='chess'){
-    // Not implemented with full state stack for brevity
-    // Would need to store board snapshots
-    alert('Отмена хода доступна в следующей версии.');
-  } else {
-    alert('Отмена хода доступна в следующей версии.');
-  }
+  alert(t('undoAlert'));
 }
 
 function newGame(){
@@ -1312,7 +1479,7 @@ function newGame(){
 function resign(){
   if(gameOver) return;
   gameOver=true;
-  showResult('lose','Вы сдались','Лучше в следующий раз!');
+  showResult('lose', t('resigned'), t('resignDesc'));
 }
 
 // ═══════════════════════════════════════════════
@@ -1324,6 +1491,7 @@ function startGame(){
   if(gameMode==='chess') initChessBoard();
   else initCheckerBoard();
   renderBoard(); updateSidebar();
+  applyI18n();
   // If player chose black, bot goes first
   if(playerColor==='b'){
     currentTurn='w'; // Bot is white
@@ -1340,6 +1508,11 @@ function startGame(){
     },600);
   }
 }
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+applyI18n();
 </script>
 </body>
 </html>
